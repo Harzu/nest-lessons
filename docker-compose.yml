@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: get_courses_psql
+    environment:
+      POSTGRES_USER: get_courses
+      POSTGRES_PASSWORD: get_courses
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "get_courses"]
+      interval: 5s
+      retries: 5
+
+  backend:
+    image: node:16
+    working_dir: /opt/nest-lessons/app
+    command: ["yarn", "start:dev"]
+    environment: 
+      PORT: 3000
+      LOG_LEVEL: "debug"
+      DATABASE_URL: postgres://get_courses@postgres:5432/get_courses
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./:/opt/nest-lessons/app"
